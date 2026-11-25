@@ -15,11 +15,11 @@ Tự động hóa thao tác vận hành, truy vấn log, dùng tag kiểm soát 
 
 | Ngày | Công việc | Bắt đầu | Hoàn thành | Tài liệu lab |
 |---|---|---|---|---|
-| Thứ hai | Gắn tag cho EC2, tạo role và hai Lambda start/stop theo lịch EventBridge, gửi thông báo Slack. | 19/10/2026 | 19/10/2026 | [000022](https://000022.awsstudygroup.com/) |
-| Thứ ba | Cài Grafana trên EC2. Thử biểu thức metric, dynamic label, Container Insights và sử dụng số đo để rút ngắn thời gian xử lý sự cố. | 20/10/2026 | 20/10/2026 | [000029](https://000029.awsstudygroup.com/) · [000036](https://000036.awsstudygroup.com/) |
-| Thứ tư | Tạo Resource Groups theo tag, viết điều kiện IAM và kiểm quyền trên EC2 có/không có tag khi đổi role. | 21/10/2026 | 21/10/2026 | [000027](https://000027.awsstudygroup.com/) · [000028](https://000028.awsstudygroup.com/) |
-| Thứ năm | Gắn role Systems Manager, dùng Patch Manager và Run Command trên nhiều máy. | 22/10/2026 | 22/10/2026 | [000031](https://000031.awsstudygroup.com/) |
-| Thứ sáu | Dùng Session Manager với các endpoint ssm, ssmmessages, ec2messages. Ghi log vào S3, so sánh ba công cụ vận hành và dọn lab. | 23/10/2026 | 23/10/2026 | [000058](https://000058.awsstudygroup.com/) |
+| Thứ hai | Gắn tag cho EC2, tạo role và hai Lambda start/stop theo lịch EventBridge, gửi thông báo Slack. | 19/10/2026 | 19/10/2026 | [000022](https://000022.awsfcaj.com/) |
+| Thứ ba | Cài Grafana trên EC2. Thử biểu thức metric, dynamic label, Container Insights và sử dụng số đo để rút ngắn thời gian xử lý sự cố. | 20/10/2026 | 20/10/2026 | [000029](https://000029.awsfcaj.com/) · [000036](https://000036.awsfcaj.com/) |
+| Thứ tư | Tạo Resource Groups theo tag, viết điều kiện IAM và kiểm quyền trên EC2 có/không có tag khi đổi role. | 21/10/2026 | 21/10/2026 | [000027](https://000027.awsfcaj.com/) · [000028](https://000028.awsfcaj.com/) |
+| Thứ năm | Gắn role Systems Manager, dùng Patch Manager và Run Command trên nhiều máy. | 22/10/2026 | 22/10/2026 | [000031](https://000031.awsfcaj.com/) |
+| Thứ sáu | Dùng Session Manager với các endpoint ssm, ssmmessages, ec2messages. Ghi log vào S3, so sánh ba công cụ vận hành và dọn lab. | 23/10/2026 | 23/10/2026 | [000058](https://000058.awsfcaj.com/) |
 
 ## Kết quả trong tuần
 

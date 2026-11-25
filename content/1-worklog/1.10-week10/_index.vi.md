@@ -15,11 +15,11 @@ chapter: false
 
 | Ngày | Công việc | Bắt đầu | Hoàn thành | Tài liệu lab |
 |---|---|---|---|---|
-| Thứ hai | Đóng gói ứng dụng bằng Docker/Compose, đẩy image lên ECR, triển khai ECS cluster, task, service và ALB. | 16/11/2026 | 16/11/2026 | [000015](https://000015.awsstudygroup.com/) · [000016](https://000016.awsstudygroup.com/) |
-| Thứ ba | Chuyển Mythical Mysfits sang microservice trên Fargate. Dùng CDK v2 cho ứng dụng Spring Boot. | 17/11/2026 | 17/11/2026 | [000067](https://000067.awsstudygroup.com/) · [000118](https://000118.awsstudygroup.com/) |
-| Thứ tư | Xây CI/CD cho ECS bằng GitHub Actions, CodeBuild, Container Insights và FireLens. Thử CodePipeline, CodeDeploy cho EC2. | 18/11/2026 | 18/11/2026 | [000017](https://000017.awsstudygroup.com/) · [000023](https://000023.awsstudygroup.com/) |
-| Thứ năm | Tạo EKS bằng eksctl, triển khai microservice với Helm, kiểm tra liveness/readiness, tiếp tục với pipeline EKS. | 19/11/2026 | 19/11/2026 | [000126](https://000126.awsstudygroup.com/) · [000152](https://000152.awsstudygroup.com/) |
-| Thứ sáu | Thử EKS Blueprints, CI/CD cho EKS và tìm hiểu ROSA. So sánh ECS, EKS, Lightsail Containers, Fargate, dọn cluster. | 20/11/2026 | 20/11/2026 | [000065](https://000065.awsstudygroup.com/) · [000062](https://000062.awsstudygroup.com/) · [000071](https://000071.awsstudygroup.com/) |
+| Thứ hai | Đóng gói ứng dụng bằng Docker/Compose, đẩy image lên ECR, triển khai ECS cluster, task, service và ALB. | 16/11/2026 | 16/11/2026 | [000015](https://000015.awsfcaj.com/) · [000016](https://000016.awsfcaj.com/) |
+| Thứ ba | Chuyển Mythical Mysfits sang microservice trên Fargate. Dùng CDK v2 cho ứng dụng Spring Boot. | 17/11/2026 | 17/11/2026 | [000067](https://000067.awsfcaj.com/) · [000118](https://000118.awsfcaj.com/) |
+| Thứ tư | Xây CI/CD cho ECS bằng GitHub Actions, CodeBuild, Container Insights và FireLens. Thử CodePipeline, CodeDeploy cho EC2. | 18/11/2026 | 18/11/2026 | [000017](https://000017.awsfcaj.com/) · [000023](https://000023.awsfcaj.com/) |
+| Thứ năm | Tạo EKS bằng eksctl, triển khai microservice với Helm, kiểm tra liveness/readiness, tiếp tục với pipeline EKS. | 19/11/2026 | 19/11/2026 | [000126](https://000126.awsfcaj.com/) · [000152](https://000152.awsfcaj.com/) |
+| Thứ sáu | Thử EKS Blueprints, CI/CD cho EKS và tìm hiểu ROSA. So sánh ECS, EKS, Lightsail Containers, Fargate, dọn cluster. | 20/11/2026 | 20/11/2026 | [000065](https://000065.awsfcaj.com/) · [000062](https://000062.awsfcaj.com/) · [000071](https://000071.awsfcaj.com/) |
 
 ## Kết quả trong tuần
 
