@@ -1,0 +1,7 @@
+{{ partial "header.html" . }}
+<span id="sidebar-toggle-span">
+  <a href="#" id="sidebar-toggle" data-sidebar-toggle=""><i class="fas fa-bars"></i> {{ if eq .Language.Lang "vi" }}Mục lục{{ else }}Navigation{{ end }}</a>
+</span>
+<h1>{{ if eq .Language.Lang "vi" }}Báo cáo thực tập{{ else }}Internship Report{{ end }}</h1>
+{{ .Content }}
+{{ partial "footer.html" . }}
