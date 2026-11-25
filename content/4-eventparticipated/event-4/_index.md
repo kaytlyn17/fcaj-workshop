@@ -22,5 +22,5 @@ Khoa Kiều from ACB and Nghi Danh, an AWS Community Builder, discussed an agent
 
 In my next agent experiment, I would define which data it can read, which changes need human approval and how I will track token use over a longer run. I also plan to stay for the Q&A at future meetups. The audience’s questions brought out some of the most interesting constraints in this demo.
 
-![Event Picture]({{< asset "images/event_fcaj1.jpg" >}})
-![Event Picture]({{< asset "images/event_fcaj2.jpg" >}})
+![Event Picture]({{< asset "images/event_fcaj_1.jpg" >}})
+![Event Picture]({{< asset "images/event_fcaj_2.jpg" >}})
