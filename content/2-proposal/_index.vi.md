@@ -30,7 +30,7 @@ Bộ luật chấm điểm dựa trên chỉ dấu và các luật nêu tên. Be
 
 Object Lock Governance bảo vệ phiên bản raw trong bảy ngày với ngoại lệ cho người có quyền bypass. OCR có thể đọc nhầm dấu, bản che PII có thể còn tên hoặc địa chỉ. Header bên trong thư forward là dữ liệu được cung cấp. Kết quả xác thực của SES thuộc lớp thư bên ngoài. Hiệu quả phát hiện ngoài bộ mẫu vẫn cần được đo bằng tập có nhãn độc lập.
 
-**Phạm vi đã triển khai.** Distribution CloudFront đã gắn Web ACL PhishGuardEdge. Trình duyệt tải file trực tiếp lên S3. Bước đọc ảnh xử lý OCR tiếng Việt/Anh và mã QR chứa URL. Kho tri thức có năm playbook nguồn. Triage đề xuất hành động theo luật, Bedrock giải thích và trích dẫn.
+**Phạm vi đã triển khai.** Distribution CloudFront đã gắn Web ACL PhishGuardEdge. Trình duyệt tải file trực tiếp lên S3. Bước đọc ảnh xử lý OCR tiếng Việt/Anh và mã QR chứa URL. Kho tri thức có sáu playbook nguồn. Triage đề xuất hành động theo luật, Bedrock giải thích và trích dẫn.
 
 ## Chi phí và điều kiện mở rộng
 

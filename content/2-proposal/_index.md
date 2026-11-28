@@ -30,7 +30,7 @@ The policy engine computes the score from indicators and named rules. Bedrock ca
 
 Object Lock Governance protects a raw version for seven days subject to authorized bypass. OCR may miss accents and masking can leave names or addresses. Forwarded headers describe the original message as supplied by the employee. SES authentication proves facts about the outer delivery. Analysts must interpret those separately. False-positive and false-negative rates on unseen real-world messages still require a labelled evaluation set.
 
-**Deployed scope.** The CloudFront distribution has the PhishGuardEdge web ACL. Raw uploads go directly to S3. Image extraction supports Vietnamese/English OCR and URL QR codes. Five source playbooks support retrieval. Triage proposes eligible actions and Bedrock explains them.
+**Deployed scope.** The CloudFront distribution has the PhishGuardEdge web ACL. Raw uploads go directly to S3. Image extraction supports Vietnamese/English OCR and URL QR codes. Six source playbooks support retrieval. Triage proposes eligible actions and Bedrock explains them.
 
 ## Costs and pilot decision
 
