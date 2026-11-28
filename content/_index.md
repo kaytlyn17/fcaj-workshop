@@ -10,6 +10,7 @@ chapter: false
 
 - **Full name:** Đỗ Thị Thanh Thúy
 - **Student ID:** SE203169
+- **Class:** FCAJ - FPT - Season 4
 - **Major:** Information Assurance
 - **Email:** kaytlynfrank@gmail.com | **Phone:** 0797229323
 

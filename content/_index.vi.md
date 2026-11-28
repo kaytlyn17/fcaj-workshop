@@ -10,6 +10,7 @@ chapter: false
 
 - **Họ và tên:** Đỗ Thị Thanh Thúy
 - **MSSV:** SE203169
+- **Lớp:** FCAJ - FPT - Season 4
 - **Ngành học:** An toàn thông tin
 - **Email:** kaytlynfrank@gmail.com | **Số điện thoại:** 0797229323
 
