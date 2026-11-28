@@ -12,7 +12,7 @@ Lúc **21:16 ngày 20/11/2026 giờ Việt Nam** (14:16 UTC), stack `phishguard-
 
 Công cụ đọc được bốn cờ chặn public của web bucket, CORS POST cho đúng origin, evidence có versioning/SSE-KMS/Governance 7 ngày, OCR layer 512 MiB x86_64. SNS có 1 email đã xác nhận. Cả 2 alarm đang OK, bật action và trỏ SecOps.
 
-Các dòng cần bổ sung bằng chứng là CloudFront (behavior, OAC, Web ACL và gói), SES (receipt rule active), Bedrock (KB/Guardrail) và Budgets. `waf_parameter_only=false` là giá trị trong stack. Kiểm tra mục Security của đúng distribution để kết luận WAF có gắn. Đọc bằng vai trò có quyền sẵn hoặc nhờ người phụ trách đối chiếu trong console. Lưu ảnh, giờ kiểm tra và ghi chú cạnh từng dòng, giữ nguyên JSON gốc.
+Bản kiểm kê ngày 20/11 chưa xác minh đầy đủ CloudFront (behavior, OAC, Web ACL và gói), SES (receipt rule active), Bedrock (KB/Guardrail) và Budgets. `waf_parameter_only=false` chỉ phản ánh tham số của stack, không cho biết Web ACL có được gắn ở CloudFront hay không. Các cấu hình ngoài stack cần được đối chiếu trong console bằng danh tính có quyền đọc. Kết quả cập nhật ngày 23–24/11 được ghi riêng ở cuối trang.
 
 Trên máy đã có project, có thể giữ nguyên `.venv` và dùng đường dẫn tới `tools/audit_phishguard.py` vừa giải nén. Ví dụ sau chạy từ thư mục `lab/` của gói. Công cụ chỉ gọi các API đọc cấu hình và ghi một tệp JSON trên máy. Bản JSON chỉ ghi số subscription email đã xác nhận. Công cụ không gọi Cost Explorer, đọc nội dung report hay xuất email người nhận, task token và hóa đơn.
 
@@ -23,10 +23,12 @@ $recipient = Read-Host 'SES lab recipient'
 
 Với tài khoản lab khác, thay `--recipient`. Nếu stack chưa lưu distribution ID, thêm `--distribution-id` với ID của distribution có hostname trùng URL web. Có thể thêm `--budget-name` khi tên budget hiện hữu không chứa “PhishGuard”.
 
-| Mở trong AWS Console | So khớp điều gì | Bằng chứng để giữ |
+## Kiểm tra cấu hình trên console
+
+| Mở trong AWS Console | Cấu hình cần kiểm tra | Dữ liệu đối chiếu |
 |---|---|---|
 | **CloudFormation → phishguard-ai → Outputs / Parameters / Resources** | Account/region, tên bucket, HTTP API, URL dashboard, KB, model, `ContainmentMode`, timeout cấu hình khi đối chiếu. Đối chiếu tên tài nguyên của stack chính và stack KB. | Bản JSON đối chiếu và ảnh các tham số liên quan. |
-| **CloudFront → đúng distribution → General / Security / Behaviors** | Domain trùng URL dashboard. Ghi **tên gói** PAYG hay Free/Pro/Business/Premium. Xem Web ACL thực sự gắn và ACL scope CloudFront (global); kiểm rule managed và rate-based theo đặc tả. `EnableWaf` ở SAM chỉ là tham số. | Ảnh gói và liên kết Web ACL, số lượng rule. Nếu chưa gắn, ghi nhận kết quả đối chiếu và thời điểm. |
+| **CloudFront → đúng distribution → General / Security / Behaviors** | Domain trùng URL dashboard. Ghi **tên gói** PAYG hay Free/Pro/Business/Premium. Xem Web ACL thực sự gắn và ACL scope CloudFront (global); kiểm managed rule group và rate-based rule ở mục 5.3.3. `EnableWaf` ở SAM chỉ là tham số. | Ảnh gói và liên kết Web ACL, số lượng rule. Nếu chưa gắn, ghi nhận kết quả đối chiếu và thời điểm. |
 | **S3 → web / intake / evidence** | Block Public Access, OAC, intake CORS cho domain CloudFront, thông báo chỉ ở `uploads/`, rule 3 ngày cho `uploads/` và `inbound/`. Kiểm tra versioning, default retention GOVERNANCE 7 ngày và SSE-KMS trên evidence. | Ảnh Properties; đối chiếu `Version ID` trong một incident. |
 | **SES, SNS, Cognito, Bedrock** | Receipt rule active; SNS subscription email Confirmed; đúng app client, callback và nhóm; KB active, lần sync Complete; model/profile và phiên bản Guardrail trùng cấu hình. | Mã incident SES, một lần truy xuất playbook, kết quả guardrail có trạng thái rõ. |
 | **CloudWatch → Alarms, Metrics** | Hai alarm có actions trỏ topic SecOps. Ảnh dưới đây xác nhận trạng thái tại thời điểm chụp. Chứng minh gửi thư thực tế bằng thư SNS khớp incident hoặc lịch sử alarm nếu đã có lần chuyển trạng thái. | Ảnh hai alarm, metric `PhishGuard / UnverifiedSender` từ H06, log có mốc thời gian. |
@@ -40,6 +42,6 @@ Nếu account chưa có budget, vào **Budgets → Create budget → Customize �
 
 Trong JSON, `MATCH` là giá trị đã đọc khớp phép kiểm ghi trong công cụ; `REVIEW` là giá trị quan sát cần xem lại; `UNVERIFIED` thường do thiếu quyền đọc, API hoặc ID; `MANUAL` yêu cầu nhìn trong console; `OBSERVED` là số liệu kiểm kê. Gặp `AccessDenied`, nhờ người có quyền đọc đúng tài nguyên đối chiếu dòng đó. Số dịch vụ tạo bằng tay như SES, WAF và CloudFront có thể nằm ngoài danh sách Resources của stack SAM.
 
-### Minh chứng bổ sung ngày 23–24/11
+## Kết quả cập nhật ngày 23–24/11
 
-Web ACL riêng đã được gắn và probe cho 200/403. Hai GET có và không có header sau khi tắt probe đều trả 200. Lần sync KB quét 5, thêm 2 và lỗi 0. Portal ghi bốn ca ảnh tại 5.5.3. Giữ các lần đối chiếu có ngày này cạnh snapshot cũ. AccessDenied của danh tính đọc ở lần đầu vẫn được ghi chưa xác minh cho chính phép gọi API đó.
+Web ACL riêng đã được gắn và probe cho 200/403. Hai GET có và không có header sau khi tắt probe đều trả 200. Lần sync KB quét 5, thêm 2 và lỗi 0. Portal ghi bốn ca ảnh tại 5.5.3. Các kết quả này bổ sung cho bản kiểm kê ngày 20/11. Chúng không thay đổi kết quả AccessDenied đã ghi ở lần đọc API trước đó.

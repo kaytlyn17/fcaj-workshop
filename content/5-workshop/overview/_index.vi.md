@@ -21,4 +21,10 @@ Một nhân viên chuyển tiếp thư nghi lừa đảo, còn đồng nghiệp 
 5. Thiếu hành động phù hợp: HIGH/CRITICAL chuyển `NEEDS_REVIEW` và báo SNS, mức thấp hơn thành `NO_ACTION`. Có đề xuất: PrepareApproval **ghi token và trạng thái `PENDING_APPROVAL` trước**, sau đó gửi SNS. Step Functions giữ bước chờ. Lambda kết thúc lượt gọi.
 6. Admin quyết định trên web. Admin API kiểm quyền, kiểm trạng thái rồi gửi `SendTaskSuccess` mang kết quả về workflow. Từ chối thành `REJECTED`, quá hạn thành `ESCALATED_TIMEOUT`. Duyệt ở chế độ `DRY_RUN` ghi kết quả mô phỏng và audit; mục blocklist nếu có chỉ có hiệu lực trong ứng dụng.
 
-**Hai ranh giới cần chỉ được trên hình.** PhishGuardEdge kiểm lưu lượng đi qua CloudFront. File đi thẳng đến S3 bằng form ký sẵn. Lambda dùng mạng do AWS quản lý trong template SAM này. Khung Region và nhóm dịch vụ thể hiện vị trí và trách nhiệm. Bước QR đọc URL ngay trong ảnh, lược query và fragment khi hiển thị, rồi chuyển chỉ dấu cho Triage. Callback thuộc chính Task của Step Functions gọi PrepareApproval.
+### Ranh giới giữa các thành phần
+
+ PhishGuardEdge kiểm lưu lượng đi qua CloudFront. File đi thẳng đến S3 bằng form ký sẵn. Lambda dùng mạng do AWS quản lý trong template SAM này. Khung Region và nhóm dịch vụ thể hiện vị trí và trách nhiệm. Bước QR đọc URL ngay trong ảnh, lược query và fragment khi hiển thị, rồi chuyển chỉ dấu cho Triage. `PrepareAndWaitApproval` dùng `lambda:invoke.waitForTaskToken`: PrepareApproval ghi token và gửi SNS rồi kết thúc, còn Task chờ callback tối đa 48 giờ. Khối Wait for approval trong hình không phải một Wait state độc lập. Ở chế độ `DRY_RUN`, bản ghi `APPROVED_DRY_RUN` không được dùng như IOC đã xác nhận để chấm các báo cáo sau.
+
+### Điểm, kết luận và xử lý
+
+`risk_score` đếm điểm luật. Từ 50 điểm, `assessment` là `SUSPICIOUS`. Dưới ngưỡng, policy ghi `UNKNOWN`, lý do `UNVERIFIED_URL` hoặc `INSUFFICIENT_SIGNALS`, và kết thúc `NO_ACTION`. Hồ sơ cũ thiếu kết luận hiển thị `UNKNOWN / LEGACY`. Đầu vào chưa đạt chất lượng đi `NEEDS_MORE_INFO` trước bước chấm. [Đối chiếu ba ca](../verify/demo/#aws-results).

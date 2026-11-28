@@ -21,7 +21,6 @@ $pgStack = 'phishguard-ai'
 aws sts get-caller-identity --profile $pgProfile --query '{Account:Account,Arn:Arn}'
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pip install "moto[s3,dynamodb]==5.2.5"
 sam --version
 node --version
 Test-Path .\layers\ocr-vie-py312-x86_64.zip
@@ -29,9 +28,25 @@ Test-Path .\layers\ocr-vie-py312-x86_64.zip
 
 **Mốc kiểm tra.** Account phải là tài khoản lab được chọn, Python là 3.12, `Test-Path` trả `True`. Nếu profile dùng IAM Identity Center và phiên đã hết hạn, chạy `aws sso login --profile phishguard`.
 
-Trong cùng cửa sổ, kiểm tra layer QR và tài liệu đi kèm bộ lab đầy đủ. Kết quả mong đợi là True và năm file. Nếu dùng profile có tên khác, đặt $pgProfile theo đúng tên đã đăng nhập.
+Trong cùng cửa sổ, kiểm tra layer QR và tài liệu đi kèm bộ lab đầy đủ. Kết quả mong đợi là True và sáu file. Nếu dùng profile có tên khác, đặt $pgProfile theo đúng tên đã đăng nhập.
 
 ```powershell
 Test-Path .\layers\qr-py312-x86_64.zip
 (Get-ChildItem .\kb-docs\playbooks\*.txt).Count
 ```
+
+## Các công cụ kiểm tra trong gói lab
+
+Một số tên file được giữ từ các đợt phát triển trước. Bảng sau giải thích chức năng để chọn đúng công cụ; các lệnh trong workshop dùng chính những tên file này.
+
+| File trong `scripts/` | Chức năng |
+|---|---|
+| `phase2b_smoke.py` | Kiểm tra nhanh API, đăng nhập, phân quyền, gửi lặp và một báo cáo vô hại sau khi triển khai backend. |
+| `verify_group1_upload.py` | Kiểm tra presigned upload, giới hạn tệp, OCR và ảnh trắng. |
+| `verify_group2_samples.py` | Kiểm tra các mẫu email DEMO_2/3 và những nhánh xử lý liên quan. |
+| `verify_admin_api.py` | Kiểm tra quyền admin/auditor, truy cập raw evidence và quyết định phê duyệt. |
+| `check_phase_h_local.py` | Chạy các hồi quy H bằng mô phỏng AWS trên máy, gồm H04 và phần lỗi giữa chừng của H13. |
+| `check_phase_h_live.py` | Kiểm tra H01–H03 trên AWS hoặc quyết định muộn H14 với tùy chọn `--expired`. |
+| `check_playbooks.py` | Truy vấn KB và kiểm tra nguồn playbook 04/05/06 trong kết quả. |
+
+Thông báo như `GATE: PHASE_2B_SMOKE_PASS` là nhãn kết quả của script. Nó chỉ xác nhận những phép kiểm script vừa chạy, không xác nhận toàn bộ hệ thống. Các kết quả `SKIPPED` và `UNVERIFIED` giữ nguyên ý nghĩa chưa thực hiện hoặc chưa xác minh.

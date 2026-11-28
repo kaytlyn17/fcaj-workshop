@@ -4,16 +4,22 @@ weight: 1
 chapter: false
 ---
 
-Choose a dedicated receiving subdomain and verify the identity/DKIM records in SES in us-east-1. Point its MX (priority 10) to `inbound-smtp.us-east-1.amazonaws.com`. In the active receipt rule set add an enabled rule for the lab recipient. First deliver to the stack intake bucket under `inbound/`, then invoke PhishGuard-Ingest asynchronously. Forward a benign email from an allowed, verified reporter. Check the S3 object and a matching SES_EMAIL incident. For an unverified sender inspect the outer message identity, allowed domains and verdict.
+Select **us-east-1** in SES. Create a domain identity that you control, publish the verification/DKIM records supplied by the console and wait for `Verified`. Add an MX record with priority 10 pointing to `inbound-smtp.us-east-1.amazonaws.com` for the receiving domain. If the main domain already receives mail through another system, use a lab subdomain and its `soc@` address, preserving the main domain's MX records.
 
-### Verify the receiving domain
+1. In **Email receiving → Receipt rule sets**, open the active rule set or create one for the lab. If the account already processes business mail, add a rule to the existing set and review the rules that precede it.
+2. Create a rule for the exact receiving address. The first action is **Deliver to S3**, using the stack's Intake bucket and `inbound/` prefix. The next is **Invoke Lambda**, selecting `PhishGuard-Ingest` with invocation type `Event` (asynchronous). Enable the rule. The stack provides the relevant SES invocation and prefix-write permissions.
+3. Forward a benign email from a verified Cognito mailbox in `AllowedSenderDomains`. Find the new object under `inbound/` and the corresponding dashboard incident. Expected fields are `source_channel=SES_EMAIL` and `reporter_identity_status=VERIFIED_SES_DMARC`. If logs show `UNVERIFIED_SENDER`, inspect the outer message address, allowed domains, `email_verified` and SES verdict.
 
-The SES identity shows DKIM configuration Successful and signatures Enabled. Next, verify the receipt rule in the active rule set and trace one forwarded email to an incident.
+[SES MX configuration](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-mx-record.html) · [Receipt rules](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-receipt-rules-console-walkthrough.html)
 
-![Verify the receiving domain]({{< asset "images/phishguard/mail-dkim.png" >}})
+### Check the receiving domain
 
-### Invoke Ingest after the S3 action
+The screenshot shows DKIM configuration as Successful and signatures Enabled. Next, check the rule in the active rule set and match a forwarded email to an incident.
 
-In step 2 of the receipt rule, choose PhishGuard-Ingest and Event invocation. The preceding action must have written the MIME object to inbound/. The screenshot shows the selected settings during setup.
+![DKIM configuration for the receiving domain.]({{< asset "images/phishguard/mail-dkim.png" >}})
 
-![Invoke Ingest after the S3 action]({{< asset "images/phishguard/ses-invoke.png" >}})
+### Invoke Ingest after storing the email
+
+Select PhishGuard-Ingest and Event invocation for the receipt rule's second action. The first action must store the MIME message under `inbound/`. The screenshot records this configuration choice.
+
+![The receipt rule's second action invokes Ingest asynchronously.]({{< asset "images/phishguard/ses-invoke.png" >}})

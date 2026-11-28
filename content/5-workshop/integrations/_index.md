@@ -11,4 +11,4 @@ Use the backend resources and stack update helper from 5.3. The two integrations
 | Section | Outcome |
 |---|---|
 | [5.4.1 · Receive email with SES](email/) | Write the original MIME to S3 before invoking Ingest. |
-| [5.4.2 · Playbooks and Bedrock](knowledge-base/) | Index five playbooks, retrieve a source and enable grounded summaries. |
+| [5.4.2 · Playbooks and Bedrock](knowledge-base/) | Index six playbooks, retrieve a source and enable grounded summaries. |

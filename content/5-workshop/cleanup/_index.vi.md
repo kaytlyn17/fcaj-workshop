@@ -6,7 +6,7 @@ aliases:
   - /vi/5-workshop/09-demo-cleanup/
 ---
 
-1. Giữ môi trường hoạt động nếu giám khảo còn cần dùng đường dẫn. Xuất bằng chứng kiểm thử, estimate và số Billing. Ghi danh sách tài nguyên theo stack chính, stack KB và các tài nguyên tạo ngoài stack.
+1. Chỉ bắt đầu thu dọn khi không còn ai cần sử dụng môi trường demo. Xuất bằng chứng kiểm thử, estimate và số Billing. Ghi danh sách tài nguyên theo stack chính, stack KB và các tài nguyên tạo ngoài stack.
 2. Khi đến thời điểm dọn, dừng nhận báo cáo mới, rà execution đang chờ duyệt và xử lý theo chính sách lab. Gỡ **riêng** receipt rule của lab. Nếu dùng DNS hoặc domain chung, bảo toàn MX và các rule phục vụ email khác.
 3. Gỡ liên kết resource ở CloudFront khi phù hợp, disable distribution, đợi **Deployed** rồi xóa khi đã sẵn sàng. Kiểm tra subscription flat-rate, WAF/Web ACL và phí theo kỳ. Hủy đăng ký email demo nếu topic được giữ lại.
 4. Xóa data source/KB trước các tài nguyên vector liên quan. Rà stack và tài nguyên có `Retain` hoặc `RetainExceptOnCreate`, gồm bảng, bucket, khóa, user pool. Với S3 versioned, kiểm tra cả version lẫn delete marker. Giữ evidence đến hết retention đã cam kết, rồi dọn bằng quy trình đã được nhóm cho phép.

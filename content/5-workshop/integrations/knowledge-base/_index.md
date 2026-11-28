@@ -4,7 +4,10 @@ weight: 2
 chapter: false
 ---
 
-Sync the bundled playbooks. The prerequisite template creates a vector bucket, a 1,024-dimensional cosine index and the setup role/policy. The commands below apply to a lab IAM user. For Identity Center use the equivalent role-based setup with your administrator.
+Images are processed by Tesseract in ExtractRedact. Bedrock receives processed text together with playbook passages retrieved from the Knowledge Base. This section configures the document source, Guardrail and model, then checks retrieval and synthesis separately.
+
+1. Prepare the bundled playbooks. `infra/phishguard-kb-prereqs.yaml` creates the vector bucket, the `playbooks` index with 1024 dimensions and cosine distance, a KB role and a setup policy attached to the specified IAM user. For IAM Identity Center, an administrator should provision the corresponding resources and grant setup permissions to the role instead of attaching the policy to an IAM user.
+2. For an IAM-user-based lab, run the following after the main stack creates the KB document bucket. The script checks the index, creates or reuses the KB/data source, waits for ingestion and tests Retrieve.
 
 ```powershell
 $kbDocs = $pgOut['KbDocsBucketName']
@@ -16,7 +19,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Chua tao duoc tai nguyen KB.' }
 .\.venv\Scripts\python.exe scripts/setup_phishguard_kb.py --profile $pgProfile
 ```
 
-Look for PHISHGUARD_KB_RETRIEVE_PASS and a playbook citation. In Bedrock create an input prompt-attack filter in a guardrail, publish a numbered version and record its ID. Confirm model or inference profile availability for Nova Lite. When using a profile, specify the profile ID and the invocation resource ARNs required for it.
+| Bedrock / S3 Vectors setting | Lab value |
+|---|---|
+| Vector store and index | Amazon S3 Vectors · `playbooks` |
+| Embedding | Titan Text Embeddings V2, float32, 1024 dimensions, cosine |
+| Source and retrieval check | The KB document bucket's `playbooks/` prefix. The latest ingestion should be COMPLETE, and Retrieve should return a document from that prefix. |
+
+3. Record `KnowledgeBaseId` when the script reports `GATE: PHISHGUARD_KB_RETRIEVE_PASS`. In **Bedrock → Guardrails**, create an input **Prompt attacks** filter, configure blocking, publish a version and record its ID/version. In the model catalog, confirm that the account can invoke Nova Lite v1 or an available inference profile for the region. When using a profile, set its `ModelId` and provide the precise profile and destination model ARNs through `ModelInvokeResourceArns`.
+4. Update the backend and run `DEMO_2` to inspect synthesis. If the result is `FALLBACK`, read `fallback_reason` and check ingestion status, Guardrail ID/version and Synthesize's Retrieve/InvokeModel permissions.
 
 ```powershell
 $kb = Read-Host 'KnowledgeBaseId'
@@ -25,23 +35,26 @@ $gv = Read-Host 'GuardrailVersion da phat hanh'
 Update-PgStack @{KnowledgeBaseId=$kb; GuardrailId=$gr; GuardrailVersion=$gv}
 ```
 
-Run DEMO_2 and inspect its synthesis source and fallback_reason. A successful KB retrieval, a model response and an observed guardrail intervention are three separate observations. Capture each outcome that occurred.
+### Verify the six indexed playbooks
 
-### Verify all five source playbooks
+In S3, open the bucket returned by `KbDocsBucketName` and its `playbooks/` prefix. The first three documents cover the SecOps handbook, transfer verification and phishing indicators. Document 04 covers forwarded email and DMARC, 05 covers HIGH reports without a supported action target, and 06 covers benefits messages with a deadline.
 
-Open the S3 bucket identified by `KbDocsBucketName` and its `playbooks/` prefix. The first three documents cover the SecOps handbook, transfer verification and common phishing indicators. Document 04 covers forwarded mail and DMARC. Document 05 covers high-risk reports that lack a valid action target. To upload using the console, open that prefix and choose **Upload → Add files → Upload**. In **Bedrock → Knowledge Bases → phishguard-kb → Data sources → phishguard-playbooks**, choose **Sync**.
-
-Inspect the completed job’s added and failed counts. The demo job scanned five documents, added two and reported zero failures, while the Documents table still displayed its three earlier entries. To check actual retrieval, use **Test knowledge base** in retrieval mode and inspect the source passages for both questions below. The bundled script also prints the filenames of the top three sources and whether the expected playbook appears.
+The historical screenshot below shows five documents at the earlier sync. When running a new sync, record the job ID and failed-document count. Check retrieval separately in **Test knowledge base** with the questions below. The bundled tool checks the top three sources.
 
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\check_playbooks.py --kb $kb --profile $pgProfile
 ```
 
-| Test question | Source and interpretation |
+| Test question | Expected source and interpretation |
 |---|---|
-| Does Return-Path differing from From prove that the original forwarded email failed DMARC? | Look for playbook 04. Distinguish the outer message authentication from headers supplied in a forwarded message. |
-| What should the analyst do when a HIGH case has no domain eligible for a block proposal? | Look for playbook 05. Review the indicators and route the case to manual review. |
+| An EML's Return-Path differs from From. Is that enough to conclude that the original email failed DMARC? | Look for playbook 04. Distinguish authentication of the outer email from headers supplied in a forwarded message. |
+| A HIGH incident has no domain supported well enough to block. What should an analyst do next? | Look for playbook 05. Review the indicators and route the case for manual investigation. |
+| A benefits SMS asks the reader to follow a link before a deadline. How should the recipient verify it? | Look for `06-nhan-tro-cap-qua-lien-ket.txt` and compare its advice with the incident rules and proposals. |
 
-Record the filename and passage returned. Then inspect the actual citations or fallback reason for H05/H11 in the portal. The application generates its own query, so its citations can differ from the interactive test.
+Inspect the returned filenames and passages. Then open H05/H11 incidents in the portal and inspect their actual citations or fallback reason. Interactive KB questions and application-generated queries can return different sources.
 
-![Latest ingestion scanned five documents, added two and reported zero failures.]({{< asset "images/phishguard/kb-sync.png" >}})
+![Before playbook 06, the ingestion scanned five documents, added two and reported zero failures. Five documents were indexed at the time.]({{< asset "images/phishguard/kb-sync.png" >}})
+
+For an existing stack, open **Knowledge Bases → Data sources → Documents** and match the URI and status. If the document was added in the console and that URI is already `INDEXED`, proceed to Retrieve. If only the S3 object was uploaded and that version is missing from the index, sync the correct data source and wait for `COMPLETE`.
+
+The AWS check found all 6/6 playbooks `INDEXED`. When asked directly how to handle a BHTN benefits SMS with a link and a deadline, Retrieve returned playbooks 04, 06 and 05 in that order. The synthesis for SMS incident `INC-9c67814b7c0a` cited playbooks 03 and 01. [Results for the three AWS incidents](../../verify/demo/#aws-results).

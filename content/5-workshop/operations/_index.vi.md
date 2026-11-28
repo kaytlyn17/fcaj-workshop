@@ -4,24 +4,38 @@ weight: 6
 chapter: false
 ---
 
-Chọn một incident demo rồi mở đồng thời trang chi tiết, execution của Step Functions và phiên bản raw trong S3 bằng đúng quyền. Ba màn hình trả lời ba câu hỏi khác nhau: chuyên viên thấy gì, workflow đã đi qua đâu và hệ thống dùng bản gốc nào. Ghi thời điểm, mã sự cố và mã phiên bản vào phiếu kiểm thử. Đối chiếu dưới đây dùng cùng các hiện vật đó để xem xét thiết kế theo AWS Well-Architected.
+Phần này xem xét cách PhishGuard được vận hành, các lựa chọn thiết kế và những giới hạn còn lại. Khi xử lý một sự cố, ba nơi thường cần mở cùng nhau là trang chi tiết trên portal, execution của Step Functions và phiên bản bằng chứng trong S3. Mã incident nối các dữ liệu này với nhau.
 
-| Tiêu chí | Quyết định trong PhishGuard | Cách kiểm tra và giới hạn của kết luận |
+## Đối chiếu kiến trúc với cấu hình
+
+CloudFront phục vụ portal từ S3 và chuyển `/api/*` tới HTTP API. WAF gắn với distribution. Hai đường nhận báo cáo qua web và SES hội tụ tại Ingest; bản gốc được lưu trước khi workflow bắt đầu. Lambda dùng mạng do AWS quản lý, template không khai báo subnet ứng dụng.
+
+Trong workflow, `PrepareAndWaitApproval` là Task dùng `lambda:invoke.waitForTaskToken`. PrepareApproval lưu token và gửi thông báo rồi kết thúc lần gọi. Task tiếp tục chờ callback tối đa 48 giờ theo cấu hình mặc định. Hai khối Prepare approval và Wait for approval trên sơ đồ mô tả hai phần của cùng cơ chế này.
+
+## Các quyết định theo AWS Well-Architected
+
+| Trụ cột | Cách áp dụng trong PhishGuard | Kết quả và giới hạn |
 |---|---|---|
-| Sơ đồ và triển khai (0,5) | CloudFront có WAF, đường web và SES hội tụ ở Ingest, raw được lưu trước khi mở workflow. Step Functions giữ callback chờ người duyệt. | Đối chiếu Behaviors, receipt rule, template và một execution với từng mũi tên ở 5.1. Lambda dùng mạng do AWS quản lý. SAM không khai báo subnet ứng dụng. |
-| Operational Excellence (0,5) | Change set cho phép xem trước cập nhật. Hai alarm báo workflow lỗi và có dữ liệu trong DLQ qua SNS. | Ở 5.5.1, kiểm tra cả trạng thái, Actions và ARN đích. Khi nhận cảnh báo, tìm thời điểm và execution hoặc log Ingest tương ứng. Ảnh alarm OK chỉ ghi trạng thái lúc chụp. |
-| Security (0,5) | JWT và quyền theo vai trò kiểm soát API. S3 giữ raw riêng, có SSE-KMS, versioning và Object Lock Governance 7 ngày. Người phê duyệt dùng Admin API. | Chạy H02 và H15 với hai reporter và auditor. So GET có header với GET thường ở bước WAF. Khi trình duyệt POST file thẳng đến S3, chính sách ký và Ingest kiểm soát đường này. Quyền bypass Governance cần giới hạn. |
-| Reliability (0,5) | Ingest dùng định danh yêu cầu để xử lý lần gửi lại. Sau khi retry bất đồng bộ hết lượt, lỗi được chuyển vào DLQ. Workflow có nhánh timeout và tổng hợp có fallback. | Chạy H01/H04 và H13/H14 trong môi trường demo. Nếu DLQ có bản tin, xác định nguyên nhân, kiểm incident và phiên bản raw trước khi cho xử lý lại. Triển khai một Region. RTO và RPO sau sự cố toàn vùng chưa được đo. |
-| Performance Efficiency (0,5) | Upload trực tiếp giảm dữ liệu chuyển qua API. Ảnh dùng Lambda x86_64 512 MiB với OCR/QR. Người duyệt có thể phản hồi sau khi Lambda chuẩn bị đã kết thúc. | So Duration p50/p95, Billed Duration, Max Memory Used của nhóm ảnh và văn bản có kích thước biết trước. Kiểm Throttles và thời gian chờ phê duyệt riêng. Workshop chưa công bố kết quả benchmark. |
-| Cost Optimization (0,5) | Mô hình theo số báo cáo, số ảnh, lượt gọi AI và phí dịch vụ cố định. WAF là dòng lớn nhất của kịch bản 300 báo cáo/tháng. | Tái tính từ CSV ở 5.7, đổi một giả định, rồi đối chiếu báo cáo Billing đúng kỳ. Ghi rõ các phần phí chia sẻ như hosted zone và các khoản có thể tiếp tục sau lab. |
-| Sustainability (ghi nhận, 0 điểm) | Xử lý theo sự kiện, vòng đời cho intake và giới hạn thời gian lưu dữ liệu tạm. | Kiểm lifecycle và phiên bản cũ sau thử nghiệm. Chỉ xóa sau khi phân biệt dữ liệu tạm với bằng chứng còn retention. Chưa có số đo phát thải cho workload này. |
+| Operational Excellence | Backend triển khai bằng SAM; change set giúp kiểm tra tác động trước khi cập nhật. Hai alarm theo dõi workflow thất bại và DLQ có bản tin, gửi thông báo qua SNS. | Ảnh ở [5.5.1](../verify/account/) cho thấy alarm OK và action đã bật tại thời điểm chụp. Chưa có minh chứng một lần alarm chuyển trạng thái và email cảnh báo tương ứng. |
+| Security | JWT và nhóm Cognito kiểm soát API. Raw evidence tách riêng, có SSE-KMS, versioning và Governance 7 ngày. Admin API kiểm quyền trước khi cấp URL raw hoặc gửi quyết định. | Kiểm thử phân quyền được mô tả ở H02/H15. Governance có thể bị bypass bởi danh tính đủ quyền. Che PII theo mẫu có thể bỏ sót tên, địa chỉ và nội dung OCR sai. |
+| Reliability | Ghi có điều kiện và execution theo incident hỗ trợ xử lý retry. Ingest bất đồng bộ có DLQ. Workflow có timeout; bước tổng hợp có fallback. | H04 và phần lỗi giữa chừng của H13 được kiểm tra bằng mô phỏng cục bộ. H14 có ảnh quá hạn và phản hồi 409. RTO/RPO cho sự cố toàn Region chưa được đo. |
+| Performance Efficiency | Upload trực tiếp tới S3 giảm dữ liệu qua API. ExtractRedact dùng x86_64, 512 MiB và layer OCR/QR. Callback không giữ Lambda chạy suốt thời gian chờ người duyệt. | Chưa có benchmark p50/p95. Khi đo, cần tách ảnh khỏi văn bản và xem Duration, Billed Duration, Max Memory Used cùng Throttles. |
+| Cost Optimization | Dự toán dựa trên số báo cáo, lượng ảnh, token và các khoản phí cố định. Intake có lifecycle, log có retention. | [5.7](../cost/) tách ngân sách, Calculator và số liệu Cost Explorer. WAF chiếm phần lớn dự toán ở tải thấp; số tiền thực tế riêng cho project chưa được đối chiếu đầy đủ. |
+| Sustainability | Xử lý theo sự kiện, không duy trì máy chủ ứng dụng chạy chờ. Dữ liệu tạm có thời hạn lưu. | Cần kiểm tra cả phiên bản object cũ khi thu dọn. Dự án chưa đo mức sử dụng năng lượng hoặc phát thải. |
 
-### Khi cần xử lý một cảnh báo
+## Xử lý khi DLQ có bản tin
 
-Nếu alarm DLQ báo có bản tin, lưu timestamp và request ID. Tìm lần gọi bất đồng bộ của Ingest trong CloudWatch Logs, kiểm object nguồn còn truy cập được và quyền đọc/ghi cần thiết. Đối chiếu DynamoDB, raw version và execution theo incident trước khi thử lại bằng dữ liệu lab. Một lần thử khôi phục đạt khi số incident và execution đúng kỳ vọng, bản gốc vẫn tra được và lần lỗi đầu tiên còn có thể giải thích qua log.
+1. Xác định thời điểm alarm và tìm lỗi của Ingest trong CloudWatch Logs.
+2. Kiểm tra object đầu vào còn tồn tại, quyền đọc/ghi và phiên bản bằng chứng đã lưu.
+3. Tra incident trong DynamoDB và execution cùng tên để biết workflow đã được khởi tạo hay chưa.
+4. Sửa nguyên nhân rồi thử lại trên dữ liệu lab. Đối chiếu số incident, phiên bản raw và execution để phát hiện việc xử lý trùng.
 
-### Điều cần tự giải thích khi bảo vệ
+Lifecycle của Intake là 3 ngày, vì vậy một bản tin để lâu trong DLQ có thể trỏ tới dữ liệu đầu vào đã hết hạn. Cần xác định còn dữ liệu nào có thể khôi phục trước khi gửi lại sự kiện.
 
-Chọn một mũi tên người nghe dễ hiểu nhầm, chẳng hạn đường upload trực tiếp hay callback. Mở cấu hình thật, trình bày bên gọi, bên nhận, dữ liệu đi qua và một tình huống lỗi. Với hình kiến trúc có AI hỗ trợ, mô tả đúng phần việc thực tế của mình và giữ lịch sử chỉnh sửa nếu có. Một mục tiêu thiết kế hoặc dự toán đều cần được ghi đúng loại minh chứng.
+## Phạm vi bảo vệ của bản lab
 
-[Khung AWS Well-Architected](https://docs.aws.amazon.com/wellarchitected/latest/framework/the-pillars-of-the-framework.html) · [Barem workshop FCAJ](https://hcm-rules.awsfcaj.com/scoring/workshop)
+WAF lọc request qua CloudFront. Upload trực tiếp tới S3 được kiểm soát bằng presigned policy và Ingest; email đi qua SES. Template vẫn để HTTP API có endpoint `execute-api` và chưa ép mọi lời gọi API đi qua CloudFront. JWT, phân quyền và throttle của API vẫn áp dụng cho đường gọi trực tiếp đó.
+
+Cognito trong template đặt MFA ở trạng thái OFF. Audit raw evidence ghi việc cấp URL 60 giây, chưa chứng minh người dùng đã tải object. Các mục này cần được đánh giá thêm trước khi dùng dữ liệu thật hoặc triển khai cho tổ chức. Containment hiện chỉ mô phỏng hoặc cập nhật danh sách nội bộ, chưa tác động lên firewall/email gateway.
+
+[AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/the-pillars-of-the-framework.html)

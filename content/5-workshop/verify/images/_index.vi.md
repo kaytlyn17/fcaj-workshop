@@ -9,7 +9,7 @@ Dùng reporter của lab. Mở portal qua CloudFront, chọn **tải file** và 
 | Thứ tự gửi | Kết quả trong lần demo | Đọc thêm trong chi tiết |
 |---|---|---|
 | 1. `blank.png` | Cần bổ sung, chưa chấm điểm | Không có chữ hay URL dùng được làm bằng chứng. |
-| 2. `qr-url.png` | 0/100, LOW, không có đề xuất | Tìm IOC `hxxps://example[.]org/workshop/qr`. Kiểm query và fragment đã được bỏ. Với blocklist sạch, một URL hợp lệ tự nó chưa tạo điểm rủi ro. |
+| 2. `qr-url.png` | Ảnh cũ ghi LOW 0/100. Bản mới dự kiến `UNKNOWN / NO_ACTION` | Tìm IOC `hxxps://example[.]org/workshop/qr`. Kiểm query và fragment đã được bỏ. Với blocklist sạch, một URL hợp lệ tự nó chưa tạo điểm rủi ro. |
 | 3. `qr-text.png` | Cần bổ sung, chưa chấm điểm | Nội dung trong QR là văn bản. Bộ trích chỉ đưa URL HTTP(S) hợp lệ vào danh sách chỉ dấu. |
 | 4. DEMO_1, ảnh mẫu | 65/100, HIGH, chờ phê duyệt | Xem chữ OCR và luật đã kích hoạt. Trạng thái này ghi nhận tại lúc chụp, trước quyết định của admin. |
 
@@ -24,3 +24,5 @@ Mở sự cố `INC-9d7627a043af`. Trong bản đã che thông tin, dòng `QR:` 
 Trong cùng hồ sơ, Policy Engine ghi 0/100 vì chưa có luật nào khớp. Uy tín của miền vẫn chưa được xác minh. Nhãn `FALLBACK` cho biết phần tóm tắt của lượt này được tạo từ kết quả theo luật. Ảnh không ghi nguyên nhân fallback.
 
 Lưu ý dòng DEMO_1 ở đầu bảng: cột nguồn ghi IMAGE nhưng nhãn phân loại có chữ “Email”. Giao diện dùng nhãn này khi có cờ prompt injection, kể cả với ảnh. Dùng loại bằng chứng, chữ OCR và các luật trong hồ sơ để giải thích ca giả danh lãnh đạo. Dòng danh sách chưa cho biết vì sao cờ xuất hiện.
+
+So với ca QR, ảnh `fixtures/regression/sms.png` còn có lời mời nhận trợ cấp và hạn chót. Khi OCR không đạt và không có URL đọc được từ QR, ảnh đi nhánh `NEEDS_MORE_INFO`. [Bảng kết quả AWS](../demo/#aws-results) cho thấy URL chưa xác minh đi nhánh `NO_ACTION`, còn SMS đủ dấu hiệu nghi ngờ đi nhánh `NEEDS_REVIEW`.

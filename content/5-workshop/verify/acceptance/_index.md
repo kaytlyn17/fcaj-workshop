@@ -6,6 +6,8 @@ aliases:
   - /5-workshop/07-tests/
 ---
 
+H01–H15 are stable identifiers for the lab’s 15 functional test cases, connecting inputs, results and logs. The `phase_h` prefix in script names is the original name of this test suite, not an additional deployment stage.
+
 The table lists the acceptance criteria. The screenshots and logs below document individual runs. H04 and the partial-failure portion of H13 use local simulation. A visible timeout proves the expiry branch. The late-decision 409 requires its own response or terminal log.
 
 | Case | Acceptance criterion |
@@ -83,3 +85,7 @@ After the approval expired for INC-0607364b5c8f, the terminal recorded H14_LATE_
 ![H14 · Verify a late decision]({{< asset "images/phishguard/h14-late.png" >}})
 
 On the demo stack record the current ApprovalTimeoutSeconds. Using Update-PgStack from 5.3.2, set it to 60 for one new approval case, then restore the recorded value after the test.
+
+H07 can score zero with an `UNKNOWN` assessment. H09 stops before scoring. H11 needs analyst review when the threshold is met without a valid proposal.
+
+On the nine development text samples, the policy correctly detected three phishing cases, produced zero false positives and missed one phishing case. The BHTN SMS was used to tune the rules. Accuracy on new data has yet to be measured with an independent test set.

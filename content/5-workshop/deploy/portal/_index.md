@@ -6,18 +6,19 @@ aliases:
   - /5-workshop/04-portal/
 ---
 
-1. In Cognito, open the PhishGuard user pool, create an available domain prefix and use the public Web app client with authorization code + PKCE. Managed login v2 requires branding for the client.
+1. In **Cognito → User pools → PhishGuard-Users → Domain**, choose an available prefix in `us-east-1` and note the full domain. Use the public `PhishGuard-Web` app client with authorization code flow and PKCE. Classic hosted UI also works when the domain is created through the CLI. For managed login v2, assign branding to the app client.
+2. In **CloudFront**, create or open the portal distribution. Use the bucket name and API hostname from stack Outputs. If two origins point to S3, select the origin with **Origin access control** and check the target selected by the behavior. The API needs one separate origin. Set the default root object to `index.html`.
 
-![Choose a unique Cognito domain prefix.]({{< asset "images/phishguard/cognito-domain.png" >}})
-
-2. Configure the CloudFront default root object as `index.html`. Add the two origins and behaviors below.
-
-| Behavior | Origin | Settings |
+| Behavior | Origin / protocol | Cache and headers |
 |---|---|---|
-| Default (*) | S3 REST endpoint of the web bucket | Sign with OAC, redirect HTTP to HTTPS. For deep links publish `frontend/deploy/cloudfront-spa-router.js` at viewer-request on this behavior. |
-| /api/* | HTTP API execute-api host, empty origin path for the default stage | HTTPS only, allow required methods including POST, CachingDisabled, AllViewerExceptHostHeader. |
+| `Default (*)` | Web bucket's S3 REST endpoint, OAC signing, redirect HTTP to HTTPS | Cache static assets. For deep links, publish `frontend/deploy/cloudfront-spa-router.js` as a CloudFront Function and associate it with **viewer-request** on this behavior only. |
+| `/api/*` | `…execute-api.us-east-1.amazonaws.com`, HTTPS only, empty Origin path for the `$default` stage | Allow all methods in the preset to include POST. Select **CachingDisabled** and **AllViewerExceptHostHeader** so the browser's JWT reaches the HTTP API. Put this behavior before the default. |
 
-3. Set the distribution ID, site origin and dashboard URL using the live stack parameters. Enter the domain without https:// in the hostname prompt.
+![Cognito domain-prefix field in us-east-1.]({{< asset "images/phishguard/cognito-domain.png" >}})
+
+*Enter the prefix here, then use the complete Cognito hostname when building the frontend.*
+
+3. Note the distribution ID and `d….cloudfront.net` domain. The following helper updates SAM for the portal and later Bedrock steps. It reads the deployed parameters, then replaces only the requested values. For an existing stack, first verify that the source you are deploying matches that stack.
 
 ```powershell
 function Update-PgStack([hashtable] $changes) {
@@ -37,14 +38,16 @@ $pgSite = 'https://' + (Read-Host 'Chi nhap hostname CloudFront').Trim().TrimEnd
 Update-PgStack @{CloudFrontDistributionId=$pgDist; CloudFrontOrigin=$pgSite; DashboardUrl="$pgSite/"}
 ```
 
-4. Create demo users and seed the three SHA-256-checked fixtures. Create a second reporter, put them in REPORTER and complete initial sign-in. For the SecOps topic create an Email subscription and follow the confirmation link.
+The update grants the specified OAC/distribution access to the web bucket, permits direct Intake POSTs from the portal origin and registers Cognito callback/logout URLs. Check that both URLs end in `/`. [CloudFront OAC for S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html) · [Managed origin request policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-origin-request-policies.html)
+
+4. Create the demo users and seed the three SHA-256-pinned fixtures. The script prompts for three email addresses controlled by your group and hides password input. For H02, create `demo-reporter-2` in **Cognito → Users**, using a separate email address, add it to `REPORTER` and sign in once to replace its temporary password. In **SNS → Topics → PhishGuard-SecOps → Create subscription**, select `Email` and enter the SecOps address. Follow **Confirm subscription** in the email and verify `Confirmed` status.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/create_demo_users.py --profile $pgProfile
 .\.venv\Scripts\python.exe scripts/seed_demo_fixtures.py --profile $pgProfile
 ```
 
-5. Enter your Cognito prefix, build the React app and upload hashed assets before index.html. Invalidate the entry page.
+5. Enter the Cognito prefix to build the live configuration. The `VITE_*` values below are public SPA configuration. Secrets and AWS credentials belong in the deployment environment.
 
 ```powershell
 $pgPrefix = (Read-Host 'Prefix Cognito da tao').Trim()
@@ -73,13 +76,17 @@ try {
   aws s3 cp dist/index.html ($web + 'index.html') --content-type text/html --cache-control no-cache --region $pgRegion --profile $pgProfile
   if ($LASTEXITCODE -ne 0) { throw 'Upload index that bai.' }
 } finally { Pop-Location }
-aws cloudfront create-invalidation --distribution-id $pgDist --paths "/" "/index.html" --profile $pgProfile
+$inv = aws cloudfront create-invalidation --distribution-id $pgDist --paths "/" "/index.html" --profile $pgProfile --query Invalidation.Id --output text
+if ($LASTEXITCODE -ne 0) { throw "CloudFront invalidation failed" }
+aws cloudfront wait invalidation-completed --distribution-id $pgDist --id $inv --profile $pgProfile
 ```
 
-Sign in via CloudFront. Submit an ordinary text report and observe POST /api/reports → 202. Choose a PNG and verify presign → 201 and direct S3 POST → 204. Open the resulting incident.
+**Check before continuing.** Open the CloudFront URL, sign in and submit the benign notice “Máy in tầng hai đang được bảo trì. Có thể dùng máy in ở tầng một.” In the browser Network panel, `POST /api/reports` should return 202. Upload a separate PNG and check for 201 from `/api/uploads/presign`, followed by 204 from the S3 POST. Use the returned incident ID to open its detail page.
 
-### Route the API separately
+### Check API routing
 
-In Behaviors open /api/*. In this capture phishguard-api receives POST requests, caching is disabled and AllViewerExceptHostHeader forwards viewer headers. Compare these values if the portal loads but submitting a report fails.
+Open `/api/*` under Behaviors. The screenshot shows `phishguard-api` accepting POST with CachingDisabled and AllViewerExceptHostHeader. Check these three settings when the page loads but report submission fails.
 
-![Route the API separately]({{< asset "images/phishguard/cf-api.png" >}})
+![CloudFront API behavior, methods and request policies.]({{< asset "images/phishguard/cf-api.png" >}})
+
+Verify `VITE_USE_MOCK=false`, the Cognito domain, pool/client, callback and evidence bucket against the stack. Confirm CloudFront serves the hashed JS named by the built `dist/index.html`. [Check the three results observed on AWS](../../verify/demo/#aws-results).

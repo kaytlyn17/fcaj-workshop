@@ -11,4 +11,4 @@ Dùng tài nguyên backend và hàm cập nhật stack đã tạo ở 5.3. Kiể
 | Mục | Kết quả cần có |
 |---|---|
 | [5.4.1 · Nhận thư qua SES](email/) | Lưu MIME gốc vào S3 trước khi gọi Ingest. |
-| [5.4.2 · Playbook và Bedrock](knowledge-base/) | Lập chỉ mục năm playbook, tra nguồn và bật tóm tắt có dẫn chứng. |
+| [5.4.2 · Playbook và Bedrock](knowledge-base/) | Lập chỉ mục sáu playbook, tra nguồn và bật tóm tắt có dẫn chứng. |

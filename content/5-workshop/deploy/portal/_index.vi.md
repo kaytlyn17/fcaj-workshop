@@ -76,7 +76,9 @@ try {
   aws s3 cp dist/index.html ($web + 'index.html') --content-type text/html --cache-control no-cache --region $pgRegion --profile $pgProfile
   if ($LASTEXITCODE -ne 0) { throw 'Upload index that bai.' }
 } finally { Pop-Location }
-aws cloudfront create-invalidation --distribution-id $pgDist --paths "/" "/index.html" --profile $pgProfile
+$inv = aws cloudfront create-invalidation --distribution-id $pgDist --paths "/" "/index.html" --profile $pgProfile --query Invalidation.Id --output text
+if ($LASTEXITCODE -ne 0) { throw "CloudFront invalidation failed" }
+aws cloudfront wait invalidation-completed --distribution-id $pgDist --id $inv --profile $pgProfile
 ```
 
 **Mốc kiểm tra.** Mở URL CloudFront, đăng nhập và gửi thông báo nội bộ “Máy in tầng hai đang được bảo trì. Có thể dùng máy in ở tầng một.” Trong Network, `POST /api/reports` trả 202. Với ảnh PNG khác, chờ `/api/uploads/presign` trả 201, sau đó POST tới S3 trả 204. Lưu mã incident để đối chiếu khi mở trang chi tiết.
@@ -86,3 +88,5 @@ aws cloudfront create-invalidation --distribution-id $pgDist --paths "/" "/index
 Trong Behaviors, mở /api/*. Ảnh cho thấy origin phishguard-api nhận POST, dùng CachingDisabled và AllViewerExceptHostHeader. Đây là ba mục cần đối chiếu khi web đã mở được nhưng gửi báo cáo lỗi.
 
 ![Kiểm tra đường API]({{< asset "images/phishguard/cf-api.png" >}})
+
+Kiểm `VITE_USE_MOCK=false`, domain Cognito, pool/client, callback và bucket evidence theo stack. Đối chiếu mã hash của JS do CloudFront phục vụ với file JS trong `dist/index.html`. [Đối chiếu kết quả ba ca trên AWS](../../verify/demo/#aws-results).

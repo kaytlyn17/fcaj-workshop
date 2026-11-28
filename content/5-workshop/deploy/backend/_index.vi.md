@@ -50,3 +50,7 @@ aws lambda get-function-configuration --function-name PhishGuard-ExtractRedact -
 ```
 
 Kiểm hai phiên bản layer OCR và QR, bộ nhớ 512 MiB, kiến trúc x86_64. Nếu không xuất bản được layer, xem sự kiện CREATE_FAILED đầu tiên, lấy action và resource bị từ chối để rà quyền của danh tính triển khai trước khi chạy lại. Thử giải mã sau khi dựng portal ở 5.5.3.
+
+### Cập nhật stack đang chạy
+
+Build mã nguồn bản phát hành. Đọc `Get-PgStack` và dùng `Update-PgStack @{}` ở [5.3.2](../portal/) để giữ tham số hiện tại. Xem từng dòng change set trước khi thực thi. Bản sửa cập nhật mã Lambda dùng chung. Nếu có xóa hoặc thay thế tài nguyên chứa dữ liệu, dừng để kiểm tra. Chờ `UPDATE_COMPLETE` rồi kiểm tra trạng thái lập chỉ mục của [playbook 06](../../integrations/knowledge-base/).

@@ -4,7 +4,7 @@ weight: 2
 chapter: false
 ---
 
-**Knowledge Base, Guardrail và model.** Nội dung ảnh đi qua Tesseract ở ExtractRedact. Bedrock nhận dữ liệu đã qua xử lý để tổng hợp. Lưu một lượt Retrieve có nguồn playbook và một kết quả tổng hợp để kiểm chứng hai bước độc lập này.
+Ảnh được xử lý bởi Tesseract trong ExtractRedact. Bedrock nhận nội dung đã qua xử lý cùng các đoạn playbook do Knowledge Base truy xuất. Phần này cấu hình nguồn tài liệu, Guardrail và model, sau đó kiểm tra riêng kết quả truy xuất và kết quả tổng hợp.
 
 1. Đồng bộ các playbook trong gói. File `infra/phishguard-kb-prereqs.yaml` tạo vector bucket, index `playbooks` 1.024 chiều cosine, role cho KB và policy setup gắn với IAM user được chỉ định. Với môi trường IAM Identity Center, quản trị viên triển khai các tài nguyên tương ứng và gán quyền setup cho role được dùng, thay phần đính kèm vào IAM user.
 2. Với người triển khai dùng IAM user của lab, chạy các lệnh sau sau khi stack chính đã tạo bucket KB. Script kiểm index, tạo hoặc tái sử dụng KB/data source, đợi đồng bộ rồi thử Retrieve.
@@ -35,11 +35,11 @@ $gv = Read-Host 'GuardrailVersion da phat hanh'
 Update-PgStack @{KnowledgeBaseId=$kb; GuardrailId=$gr; GuardrailVersion=$gv}
 ```
 
-### Kiểm tra năm playbook sau khi đồng bộ
+### Kiểm tra sáu playbook đã lập chỉ mục
 
-Trong S3, mở bucket do `KbDocsBucketName` trả về và prefix `playbooks/`. Ba tài liệu đầu là sổ tay SecOps, xác minh chuyển khoản và dấu hiệu lừa đảo. File 04 hướng dẫn đọc email chuyển tiếp và đánh giá kết quả DMARC. File 05 hướng dẫn xem xét cảnh báo HIGH chưa có mục tiêu hành động đủ căn cứ. Nếu dùng Console, có thể vào đúng prefix, chọn **Upload → Add files → Upload**, sau đó mở **Bedrock → Knowledge Bases → phishguard-kb → Data sources → phishguard-playbooks → Sync**.
+Trong S3, mở bucket do `KbDocsBucketName` trả về và prefix `playbooks/`. Ba tài liệu đầu là sổ tay SecOps, xác minh chuyển khoản và dấu hiệu lừa đảo. File 04 hướng dẫn đọc email chuyển tiếp và DMARC. File 05 hướng dẫn xem xét cảnh báo HIGH thiếu mục tiêu hành động. File 06 hướng dẫn xác minh lời mời nhận trợ cấp có hạn chót.
 
-Khi job báo Complete, xem số tài liệu thêm và số lỗi. Trong ảnh demo, job quét năm file, thêm hai và lỗi bằng 0; bảng Documents phía dưới vẫn đang hiện ba bản ghi cũ. Để biết tài liệu có được trả về khi tìm kiếm, mở **Test knowledge base**, chọn truy xuất nguồn rồi thử hai câu hỏi dưới đây. Có thể dùng công cụ trong bộ lab để xem tên tối đa ba file nguồn và kiểm tra playbook mong đợi có xuất hiện.
+Ảnh lịch sử bên dưới ghi nhận năm tài liệu tại lần sync trước khi có 06. Khi chạy một sync mới, ghi mã job và số tài liệu lỗi. Kiểm tra riêng khả năng truy xuất trong **Test knowledge base** bằng ba câu hỏi dưới đây. Công cụ đi kèm kiểm tra ba nguồn đầu.
 
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\check_playbooks.py --kb $kb --profile $pgProfile
@@ -49,7 +49,12 @@ Khi job báo Complete, xem số tài liệu thêm và số lỗi. Trong ảnh de
 |---|---|
 | Return-Path trong EML khác From. Có đủ căn cứ kết luận DMARC của thư gốc thất bại không? | Tìm playbook 04. Phân biệt xác thực của email lớp ngoài với header do người gửi chuyển tiếp cung cấp. |
 | Sự cố HIGH thiếu domain đủ căn cứ để chặn. Chuyên viên nên làm gì tiếp? | Tìm playbook 05. Đối chiếu các chỉ dấu và chuyển kiểm tra thủ công. |
+| SMS mời nhận trợ cấp qua liên kết và gây áp lực hết hạn. Nên xác minh thế nào? | Tìm `06-nhan-tro-cap-qua-lien-ket.txt`. Đối chiếu hướng dẫn với luật và đề xuất trong incident. |
 
 Ghi lại tên file và đoạn nguồn trả về. Sau đó mở H05/H11 trên portal, xem nguồn trích thực tế và lý do fallback nếu có. Kết quả của câu hỏi thử KB và câu truy vấn do ứng dụng tự tạo có thể khác nhau.
 
-![Lượt đồng bộ gần nhất quét 5 tài liệu, thêm 2, lỗi 0.]({{< asset "images/phishguard/kb-sync.png" >}})
+![Trước khi thêm playbook 06, lượt đồng bộ quét 5 tài liệu, thêm 2, lỗi 0.]({{< asset "images/phishguard/kb-sync.png" >}})
+
+Với stack đang chạy, xem **Knowledge Bases → Data sources → Documents** và đối chiếu cả URI lẫn trạng thái. Nếu tài liệu đã nạp qua Console và đúng URI là `INDEXED`, tiếp tục thử Retrieve. Nếu mới tải file vào S3 và chỉ mục chưa có bản đó, chọn Sync trên đúng data source và đợi `COMPLETE`.
+
+Trong lần kiểm tra trên AWS, cả 6/6 playbook đều ở trạng thái `INDEXED`. Khi hỏi trực tiếp cách xử lý SMS yêu cầu bấm liên kết nhận trợ cấp BHTN trước hạn, Retrieve trả về playbook 04, 06, 05 theo thứ tự. Synthesize của incident SMS `INC-9c67814b7c0a` thực tế trích playbook 03 và 01. [Kết quả của ba incident trên AWS](../../verify/demo/#aws-results).

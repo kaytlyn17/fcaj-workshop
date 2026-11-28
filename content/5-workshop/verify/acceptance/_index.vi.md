@@ -6,6 +6,8 @@ aliases:
   - /vi/5-workshop/07-tests/
 ---
 
+H01–H15 là mã cố định của 15 ca kiểm thử chức năng trong bộ lab, dùng để đối chiếu đầu vào, kết quả và log. Tiền tố `phase_h` trong tên script là tên cũ của nhóm kiểm thử này, không phải một bước triển khai bổ sung.
+
 Bảng dưới ghi **điều kiện đạt của từng ca**. Các ảnh và log bên dưới ghi nhận những lượt chạy có minh chứng. H04 và phần kiểm thử lỗi giữa chừng của H13 dùng mô phỏng cục bộ.
 
 | Ca | Kết quả cần đối chiếu |
@@ -32,7 +34,7 @@ Bảng dưới ghi **điều kiện đạt của từng ca**. Các ảnh và log
 .\.venv\Scripts\python.exe scripts/verify_group1_upload.py --profile $pgProfile
 ```
 
-Hai lệnh sau lệnh chạy cục bộ tạo dữ liệu thử trên account lab. Người đã có minh chứng đúng phiên bản có thể dùng lại. Với bộ mẫu cần phê duyệt, dùng `verify_admin_api.py` cho DEMO_1 và `verify_group2_samples.py` cho DEMO_2/3 trên stack ở `DRY_RUN`. Khi script ghi `SKIPPED` hoặc `UNVERIFIED`, dùng đúng trạng thái này cho phần chưa quan sát.
+Hai lệnh sau lệnh chạy cục bộ tạo dữ liệu thử trên account lab. Với bộ mẫu cần phê duyệt, dùng `verify_admin_api.py` cho DEMO_1 và `verify_group2_samples.py` cho DEMO_2/3 trên stack ở `DRY_RUN`. Khi script ghi `SKIPPED` hoặc `UNVERIFIED`, dùng đúng trạng thái này cho phần chưa quan sát.
 
 ![Lịch sử các bước của một execution đi qua MarkNoAction và Done]({{< asset "images/phishguard/workflow.png" >}})
 
@@ -40,7 +42,7 @@ Hai lệnh sau lệnh chạy cục bộ tạo dữ liệu thử trên account la
 
 ![H14 · expired approval in the dashboard]({{< asset "images/phishguard/h14.png" >}})
 
-Lưu riêng ảnh “Quá hạn duyệt” và phản hồi 409 khi thử quyết định muộn. Dòng 172800 giây trong kết quả audit xác nhận giá trị hiện tại.
+Ảnh “Quá hạn duyệt” ghi nhận nhánh timeout; phản hồi 409 kiểm tra riêng việc từ chối quyết định muộn. Bản kiểm kê ngày 20/11 ghi timeout 172800 giây tại thời điểm đó.
 
 ## Tái hiện trên web
 
@@ -80,6 +82,10 @@ Trang chi tiết có ba luật kích hoạt và hai nguồn RAG là playbook 03 
 
 ### H14 · Kiểm tra quyết định muộn
 
-Sau khi INC-0607364b5c8f quá hạn, terminal hiện H14_LATE_DECISION_409: PASS. Ghép kết quả này với dòng Quá hạn duyệt trên dashboard để chứng minh cả hai điều kiện H14.
+Sau khi INC-0607364b5c8f quá hạn, terminal hiện H14_LATE_DECISION_409: PASS. Cùng với dòng Quá hạn duyệt trên dashboard, kết quả này xác nhận cả hai điều kiện của H14 trong lượt chạy đó.
 
 ![H14 · Kiểm tra quyết định muộn]({{< asset "images/phishguard/h14-late.png" >}})
+
+H07 có thể đạt 0 điểm và trả `UNKNOWN`. H09 dừng trước khi chấm. H11 cần người xem xét khi đạt ngưỡng mà chưa có đề xuất hợp lệ.
+
+Trên 9 mẫu văn bản của tập development, policy phát hiện đúng 3 ca phishing, báo nhầm 0 ca và bỏ sót 1 ca. Mẫu SMS BHTN đã được dùng để chỉnh luật. Chưa có tập kiểm thử độc lập để kết luận độ chính xác trên dữ liệu mới.
